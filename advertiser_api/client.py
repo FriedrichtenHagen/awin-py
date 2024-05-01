@@ -2,6 +2,7 @@ import os
 from urllib.parse import urljoin
 import requests
 from dotenv import load_dotenv
+from pprint import pprint
 
 from advertiser_api.errors import AwinError
 """
@@ -51,28 +52,67 @@ class Awin:
                     raise AwinError(f"Failed to parse response as json: {response.text}")
             else:
                 pass
+                pprint(response)
+                pprint(response.url)
+                pprint(response.status_code)  # This will pprint the status code (400 in your case)
+                pprint(response.text)  # This will print the content of the response, which might contain error messages or additional information from the server
                 # raise AwinApiError.from_response(response)
+    
+
     
     def get_accounts(self):
         """
         GET accounts
         provides a list of accounts you have access to
 
-        :return: list of ``Employee`` instances
+        :return: list of ``account`` instances
+
+        https://wiki.awin.com/index.php/API_get_accounts
         """
         accounts = self.request('accounts')
         return accounts
-    
-    
+        
+    def get_publishers(self):
+        """
+        GET publishers
+        provides a list of publishers you have an active relationship with
 
-        # GET accounts
-        # provides a list of accounts you have access to
-        
-        # GET publishers
-        # provides a list of publishers you have an active relationship with
-        
-        # GET transactions (list)
-        # provides a list of your individual transactions
+        :return: list of ``publisher`` instances
+
+        https://wiki.awin.com/index.php/API_get_publishers
+        """
+        publishers = self.request(f'advertisers/{self.client_id}/publishers')
+        return publishers
+    
+    def get_transactions(self, start_date, end_date, date_type='transaction', timezone='UTC', status=None, publisher_id=None, show_basket_products=None):
+        """
+        GET transactions (list)
+        provides a list of your individual transactions
+
+        :return: list of ``transaction`` instances
+
+        https://wiki.awin.com/index.php/API_get_transactions_list
+        """
+
+        # Convert datetime to string
+        dt_start_str = start_date.strftime("%Y-%m-%dT%H:%M:%S")
+        dt_end_str = end_date.strftime("%Y-%m-%dT%H:%M:%S")
+
+        params = {
+            'startDate': dt_start_str,
+            'endDate': dt_end_str,
+            'timezone': timezone,
+            'dateType': date_type,
+            'status': status,
+            'publisherId': publisher_id,
+            'showBasketProducts': show_basket_products	
+        }
+        transactions = self.request(f'advertisers/{self.client_id}/transactions/', params)
+        return transactions
+
+
+
+
         
         # GET transactions (by ID)
         # provides individual transactions by ID
