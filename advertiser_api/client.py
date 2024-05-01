@@ -4,7 +4,7 @@ import requests
 from dotenv import load_dotenv
 from pprint import pprint
 
-from advertiser_api.errors import AwinError
+from advertiser_api.errors import AwinError, PersonioApiError
 """
 Implementation of the Awin API functions
 
@@ -16,14 +16,9 @@ class Awin:
     BASE_URL = "https://api.awin.com/"
     """base URL of the Personio HTTP API"""
 
-    ACCOUNTS_URL = 'accounts'
-    PUBLISHERS_URL = ''
-    TRANSACTIONS_URL = ''
-
     def __init__(self, base_url=None, client_id=None, client_secret=None):
         self.base_url = base_url or self.BASE_URL
         
-        # Load environment variables from the .env file
         load_dotenv()
         self.client_id = client_id or os.getenv('CLIENT_ID')
         self.client_secret = client_secret or os.getenv('CLIENT_SECRET')
@@ -51,12 +46,7 @@ class Awin:
                 except ValueError:
                     raise AwinError(f"Failed to parse response as json: {response.text}")
             else:
-                pass
-                pprint(response)
-                pprint(response.url)
-                pprint(response.status_code)  # This will pprint the status code (400 in your case)
-                pprint(response.text)  # This will print the content of the response, which might contain error messages or additional information from the server
-                # raise AwinApiError.from_response(response)
+                raise PersonioApiError.from_response(response)
     
 
     
