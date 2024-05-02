@@ -3,6 +3,8 @@ from urllib.parse import urljoin
 import requests
 from dotenv import load_dotenv
 from pprint import pprint
+from datetime import datetime, timedelta
+
 
 from advertiser_api.errors import AwinError, PersonioApiError
 """
@@ -101,17 +103,60 @@ class Awin:
         return transactions
 
 
+    def paginate_transactions(self, start_date, end_date, date_type='transaction', timezone='UTC', status=None, publisher_id=None, show_basket_products=None):
+        # the maximum date range between startDate and endDate currently supported is 31 days
+        # calculate number of requests:
+        number_of_days = (end_date - start_date).days
+
+        number_of_requests = number_of_days // 31
+        if number_of_requests % 31 != 0 or number_of_days < 31:
+            number_of_requests += 1
+        
+        print(f'number of request: {number_of_requests}')
 
 
-        
-        # GET transactions (by ID)
-        # provides individual transactions by ID
-        
-        # GET reports aggregated by publisher
-        # provides aggregated reports for the publishers you work with
-        
-        # GET reports aggregated by creative
-        # provides aggregated reports for the creatives you used
-        
-        # GET reports aggregated by campaign
-        # provides aggregated reports for the campaigns that the publisher promotes
+        result = []
+        for i in range(number_of_requests):
+            if number_of_requests == 1:
+                pag_start_date = start_date
+                pag_end_date = end_date
+                print(f'start date:{pag_start_date}, end date: {pag_end_date}')
+                print(f'{(pag_end_date - pag_start_date).days}')
+            elif i == number_of_requests - 1:
+                # last request
+                pag_start_date = start_date + timedelta(days=i * 31)
+                pag_end_date = end_date
+                print(f'start date:{pag_start_date}, end date: {pag_end_date}')
+                print(f'{(pag_end_date - pag_start_date).days}')
+            else:
+                pag_start_date = start_date + timedelta(days=i * 31)
+                pag_end_date = pag_start_date + timedelta(days=31)
+                print(f'start date:{pag_start_date}, end date: {pag_end_date}')
+                print(f'{(pag_end_date - pag_start_date).days}')
+
+            # Convert datetime to string
+            dt_start_str = pag_start_date.strftime("%Y-%m-%dT%H:%M:%S")
+            dt_end_str = pag_end_date.strftime("%Y-%m-%dT%H:%M:%S")
+            print(dt_end_str, dt_start_str)
+            
+            json_response = self.get_transactions(pag_start_date, pag_end_date, date_type, timezone, status, publisher_id, show_basket_products)
+            result.append(json_response)
+
+        return result
+
+
+
+
+
+
+    # GET transactions (by ID)
+    # provides individual transactions by ID
+    
+    # GET reports aggregated by publisher
+    # provides aggregated reports for the publishers you work with
+    
+    # GET reports aggregated by creative
+    # provides aggregated reports for the creatives you used
+    
+    # GET reports aggregated by campaign
+    # provides aggregated reports for the campaigns that the publisher promotes
