@@ -50,8 +50,6 @@ class Awin:
             else:
                 raise PersonioApiError.from_response(response)
     
-
-    
     def get_accounts(self):
         """
         GET accounts
@@ -75,7 +73,7 @@ class Awin:
         """
         publishers = self.request(f'advertisers/{self.client_id}/publishers')
         return publishers
-    
+
     def get_transactions(self, start_date, end_date, date_type='transaction', timezone='UTC', status=None, publisher_id=None, show_basket_products=None):
         """
         GET transactions (list)
@@ -85,62 +83,51 @@ class Awin:
 
         https://wiki.awin.com/index.php/API_get_transactions_list
         """
-
-        # Convert datetime to string
-        dt_start_str = start_date.strftime("%Y-%m-%dT%H:%M:%S")
-        dt_end_str = end_date.strftime("%Y-%m-%dT%H:%M:%S")
-
-        params = {
-            'startDate': dt_start_str,
-            'endDate': dt_end_str,
-            'timezone': timezone,
-            'dateType': date_type,
-            'status': status,
-            'publisherId': publisher_id,
-            'showBasketProducts': show_basket_products	
-        }
-        transactions = self.request(f'advertisers/{self.client_id}/transactions/', params)
-        return transactions
-
-
-    def paginate_transactions(self, start_date, end_date, date_type='transaction', timezone='UTC', status=None, publisher_id=None, show_basket_products=None):
         # the maximum date range between startDate and endDate currently supported is 31 days
         # calculate number of requests:
         number_of_days = (end_date - start_date).days
-
         number_of_requests = number_of_days // 31
         if number_of_requests % 31 != 0 or number_of_days < 31:
             number_of_requests += 1
-        
         print(f'number of request: {number_of_requests}')
 
-
+        # paginage in steps of 31 days
         result = []
         for i in range(number_of_requests):
+            print(f'request number {i}')
             if number_of_requests == 1:
+                # only one request
                 pag_start_date = start_date
                 pag_end_date = end_date
-                print(f'start date:{pag_start_date}, end date: {pag_end_date}')
-                print(f'{(pag_end_date - pag_start_date).days}')
             elif i == number_of_requests - 1:
                 # last request
                 pag_start_date = start_date + timedelta(days=i * 31)
                 pag_end_date = end_date
-                print(f'start date:{pag_start_date}, end date: {pag_end_date}')
-                print(f'{(pag_end_date - pag_start_date).days}')
             else:
+                # other requests
                 pag_start_date = start_date + timedelta(days=i * 31)
                 pag_end_date = pag_start_date + timedelta(days=31)
-                print(f'start date:{pag_start_date}, end date: {pag_end_date}')
-                print(f'{(pag_end_date - pag_start_date).days}')
+
+            # add 1s to end date. This prevents the end date and the start date of the next request from overlapping
+            if i > 0:
+                pag_start_date += timedelta(seconds=1)
 
             # Convert datetime to string
             dt_start_str = pag_start_date.strftime("%Y-%m-%dT%H:%M:%S")
             dt_end_str = pag_end_date.strftime("%Y-%m-%dT%H:%M:%S")
-            print(dt_end_str, dt_start_str)
+            print(f'Start timestamp: {dt_start_str}. End timestamp:{dt_end_str}')
             
-            json_response = self.get_transactions(pag_start_date, pag_end_date, date_type, timezone, status, publisher_id, show_basket_products)
-            result.append(json_response)
+            params = {
+                'startDate': dt_start_str,
+                'endDate': dt_end_str,
+                'timezone': timezone,
+                'dateType': date_type,
+                'status': status,
+                'publisherId': publisher_id,
+                'showBasketProducts': show_basket_products	
+            }
+            transactions = self.request(f'advertisers/{self.client_id}/transactions/', params)
+            result.append(transactions)
 
         return result
 
