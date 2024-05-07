@@ -8,6 +8,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 from advertiser_api.errors import AwinError, AwinApiError
+from advertiser_api.models import Transaction
 """
 Implementation of the Awin API functions
 
@@ -113,7 +114,7 @@ class Awin:
         print(f'number of request: {number_of_requests}')
 
         # paginate in steps of 31 days
-        result = []
+        total_transaction_list = []
         for i in range(number_of_requests):
             print(f'request number {i}')
             if number_of_requests == 1:
@@ -152,14 +153,64 @@ class Awin:
             if i % 20 == 0 and i > 0:
                 time.sleep(60)
 
-            transactions = self._request(f'advertisers/{self.client_id}/transactions/', params)
-            result.append(transactions)
-        return result
+            pag_transaction_list = self._request(f'advertisers/{self.client_id}/transactions/', params)
+            total_transaction_list.extend(pag_transaction_list)
+
+        model_testing_list = []
+        for transaction in total_transaction_list:
+            model_testing_list.append(Transaction(**transaction))
+
+        return model_testing_list
     
 
     # GET transactions (by ID)
     # provides individual transactions by ID
-    
+    def get_transactions_by_id(self, ids: List[str], timezone: str ='UTC', show_basket_products: bool=None)  -> List[Dict[str, Any]]:
+        """
+        GET transactions (list)
+        provides a list of transactions by id
+
+        :param ids:	List of ids.
+        :param timezone: Can be one of the following:
+            Europe/Berlin
+            Europe/Paris
+            Europe/London
+            Europe/Dublin
+            Canada/Eastern
+            Canada/Central
+            Canada/Mountain
+            Canada/Pacific
+            US/Eastern
+            US/Central
+            US/Mountain
+            US/Pacific
+            UTC
+        :param show_basket_products: If &showBasketProducts=true then products sent via Product Level Tracking matched to the transaction can be viewed
+        :return: list of ``transaction`` instances
+
+        https://wiki.awin.com/index.php/API_get_transactions_ids
+        """
+
+        # extract ids from comma separated string
+        comma_separated_ids = ", ".join(ids)
+        print(comma_separated_ids)
+
+
+        params = {
+            'ids': comma_separated_ids,
+            'timezone': timezone,
+            'showBasketProducts': show_basket_products	
+        }
+
+        transactions = self._request(f'advertisers/{self.client_id}/transactions/', params)
+
+        model_testing_list = []
+        for transaction in transactions:
+            model_testing_list.append(Transaction(**transaction))
+
+        return transactions
+
+
     # GET reports aggregated by publisher
     # provides aggregated reports for the publishers you work with
     

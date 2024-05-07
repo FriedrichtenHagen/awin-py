@@ -12,7 +12,7 @@ class AwinError(Exception):
 class MissingCredentialsError(AwinError):
     """you are missing some strictly required credentials"""
 
-class PersonioApiError(AwinError):
+class AwinApiError(AwinError):
     """
     An error response from the Awin HTTP API
 
@@ -34,10 +34,10 @@ class PersonioApiError(AwinError):
     @classmethod
     def from_response(cls, response: Response):
         """
-        Creates a ``PersonioApiError`` from the specified HTTP response.
+        Creates a ``AwinApiError`` from the specified HTTP response.
 
-        :param response: a HTTP error response from Personio
-        :return: a PersonioApiError that matches the HTTP error
+        :param response: a HTTP error response from Awin
+        :return: a AwinApiError that matches the HTTP error
         """
         try:
             data: Dict = response.json()
@@ -45,13 +45,13 @@ class PersonioApiError(AwinError):
             error = data.get('error')
             message = data.get('description')
 
-            return PersonioApiError(
+            return AwinApiError(
                 status_code=status_code,
                 error=error,
                 message=message,
                 response=response)
         except ValueError:
-            return PersonioApiError(
+            return AwinApiError(
                 status_code=response.status_code,
                 message=response.text,
                 response=response)
