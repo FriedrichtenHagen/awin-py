@@ -10,6 +10,9 @@ Handles pagination, rate limiting, ...
 - data model:
     kwargs vs explicit naming
     How do I handle the returned models? Is this really that helpful?
+
+- get_transactions_by_date_range
+    -> use _paginate_by_date_range
 - add typing: return types and parameter types
 
 - Error handeling:

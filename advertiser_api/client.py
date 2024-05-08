@@ -52,6 +52,71 @@ class Awin:
             else:
                 raise AwinApiError.from_response(response)
     
+    def _paginate_date_range(self, path, start_date, end_date, is_report, params=None, method='GET') -> List[Dict[str, Any]]:
+        """
+        Paginate over a provided date range.
+        Returns a list of results
+
+        :param path: the URL path (relative to the Awin API base URL)
+        :param start_date: date object that specifies the beginning of the selected date range
+        :param is_report: boolean to indicate if report endpoint or other. Necessary for date formats
+        :param end_date: date object that specifies the end of the selected date range
+        :param params: dictionary of URL parameters
+        :return: list of transactions
+
+        """
+        # the maximum date range between startDate and endDate currently supported is 31 days
+        # calculate number of requests:
+        number_of_days = (end_date - start_date).days
+        number_of_requests = number_of_days // 31
+        if number_of_requests % 31 != 0 or number_of_days < 31:
+            number_of_requests += 1
+        print(f'number of request: {number_of_requests}')
+
+        # paginate in steps of 31 days
+        total_transaction_list = []
+        for i in range(number_of_requests):
+            print(f'request number {i}')
+            if number_of_requests == 1:
+                # only one request
+                pag_start_date = start_date
+                pag_end_date = end_date
+            elif i == number_of_requests - 1:
+                # last request
+                pag_start_date = start_date + timedelta(days=i * 31)
+                pag_end_date = end_date
+            else:
+                # other requests
+                pag_start_date = start_date + timedelta(days=i * 31)
+                pag_end_date = pag_start_date + timedelta(days=31)
+
+            if is_report:
+                # date in ISO8601 e.g 2017-01-01
+                dt_start_str = pag_start_date.date().isoformat()
+                dt_end_str = pag_end_date.date().isoformat()
+            else:
+                # accounts, publishers and transaction endpoints expect timestamps
+                # add 1s to end date. This prevents the end date and the start date of the next request from overlapping
+                if i > 0:
+                    pag_start_date += timedelta(seconds=1)
+                    # Convert datetime to awin date string format
+                    dt_start_str = pag_start_date.strftime("%Y-%m-%dT%H:%M:%S")
+                    dt_end_str = pag_end_date.strftime("%Y-%m-%dT%H:%M:%S")
+
+            print(f'Start timestamp: {dt_start_str}. End timestamp:{dt_end_str}')
+            
+            # add start and end date to params
+            params['startDate'] = dt_start_str
+            params['endDate'] = dt_end_str
+
+            # make sure rate limit is not reached
+            if i % 20 == 0 and i > 0:
+                time.sleep(60)
+
+            pag_transaction_list = self._request(f'advertisers/{self.client_id}/{path}', params)
+            total_transaction_list.extend(pag_transaction_list)
+        return total_transaction_list
+    
     def get_accounts(self) -> List[Dict[str, Any]]:
         """
         GET accounts
@@ -105,66 +170,21 @@ class Awin:
 
         https://wiki.awin.com/index.php/API_get_transactions_list
         """
-        # the maximum date range between startDate and endDate currently supported is 31 days
-        # calculate number of requests:
-        number_of_days = (end_date - start_date).days
-        number_of_requests = number_of_days // 31
-        if number_of_requests % 31 != 0 or number_of_days < 31:
-            number_of_requests += 1
-        print(f'number of request: {number_of_requests}')
+        params = {
+            'timezone': timezone,
+            'dateType': date_type,
+            'status': status,
+            'publisherId': publisher_id,
+            'showBasketProducts': show_basket_products	
+        }
+        pag_transaction_list = self._paginate_date_range(path='transactions/', start_date= start_date, end_date= end_date, is_report= False, params= params)
 
-        # paginate in steps of 31 days
-        total_transaction_list = []
-        for i in range(number_of_requests):
-            print(f'request number {i}')
-            if number_of_requests == 1:
-                # only one request
-                pag_start_date = start_date
-                pag_end_date = end_date
-            elif i == number_of_requests - 1:
-                # last request
-                pag_start_date = start_date + timedelta(days=i * 31)
-                pag_end_date = end_date
-            else:
-                # other requests
-                pag_start_date = start_date + timedelta(days=i * 31)
-                pag_end_date = pag_start_date + timedelta(days=31)
+        # model_testing_list = []
+        # for transaction in total_transaction_list:
+        #     model_testing_list.append(Transaction(**transaction))
 
-            # add 1s to end date. This prevents the end date and the start date of the next request from overlapping
-            if i > 0:
-                pag_start_date += timedelta(seconds=1)
+        return pag_transaction_list
 
-            # Convert datetime to string
-            dt_start_str = pag_start_date.strftime("%Y-%m-%dT%H:%M:%S")
-            dt_end_str = pag_end_date.strftime("%Y-%m-%dT%H:%M:%S")
-            print(f'Start timestamp: {dt_start_str}. End timestamp:{dt_end_str}')
-            
-            params = {
-                'startDate': dt_start_str,
-                'endDate': dt_end_str,
-                'timezone': timezone,
-                'dateType': date_type,
-                'status': status,
-                'publisherId': publisher_id,
-                'showBasketProducts': show_basket_products	
-            }
-
-            # make sure rate limit is not reached
-            if i % 20 == 0 and i > 0:
-                time.sleep(60)
-
-            pag_transaction_list = self._request(f'advertisers/{self.client_id}/transactions/', params)
-            total_transaction_list.extend(pag_transaction_list)
-
-        model_testing_list = []
-        for transaction in total_transaction_list:
-            model_testing_list.append(Transaction(**transaction))
-
-        return model_testing_list
-    
-
-    # GET transactions (by ID)
-    # provides individual transactions by ID
     def get_transactions_by_id(self, ids: List[str], timezone: str ='UTC', show_basket_products: bool=None)  -> List[Dict[str, Any]]:
         """
         GET transactions (list)
@@ -195,7 +215,6 @@ class Awin:
         comma_separated_ids = ", ".join(ids)
         print(comma_separated_ids)
 
-
         params = {
             'ids': comma_separated_ids,
             'timezone': timezone,
@@ -204,15 +223,52 @@ class Awin:
 
         transactions = self._request(f'advertisers/{self.client_id}/transactions/', params)
 
-        model_testing_list = []
-        for transaction in transactions:
-            model_testing_list.append(Transaction(**transaction))
+        # model_testing_list = []
+        # for transaction in transactions:
+        #     model_testing_list.append(Transaction(**transaction))
 
         return transactions
 
-
     # GET reports aggregated by publisher
     # provides aggregated reports for the publishers you work with
+    def get_reports_agg_by_publisher(self, 
+                                     start_date:str, 
+                                     end_date:str, 
+                                     date_type:str = 'transaction', 
+                                     timezone:str = 'UTC') -> List[Dict[str, Any]]:
+        """
+        GET transactions (list)
+        provides a list of transactions by id
+
+        :param start_date: date object that specifies the beginning of the selected date range
+        :param end_date: date object that specifies the end of the selected date range
+        :param date_type: The type of date by which the transactions are selected. Can be 'transaction' or 'validation'. (optional)
+        :param timezone: Can be one of the following:
+            Europe/Berlin
+            Europe/Paris
+            Europe/London
+            Europe/Dublin
+            Canada/Eastern
+            Canada/Central
+            Canada/Mountain
+            Canada/Pacific
+            US/Eastern
+            US/Central
+            US/Mountain
+            US/Pacific
+            UTC
+        :return: list of ``transaction`` instances
+
+        https://wiki.awin.com/index.php/API_get_reports_aggrcampaign_adv
+        """
+        params = {
+            'date_type': date_type,
+            'timezone': timezone,
+        }
+        pag_transaction_list = self._paginate_date_range(path='reports/publisher', start_date= start_date, end_date= end_date, is_report= True, params= params)
+        return pag_transaction_list
+    
+
     
     # GET reports aggregated by creative
     # provides aggregated reports for the creatives you used
