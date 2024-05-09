@@ -10,10 +10,13 @@ Handles pagination, rate limiting, ...
 - data model:
     kwargs vs explicit naming
     How do I handle the returned models? Is this really that helpful?
+    update docstring return 
 
-- get_transactions_by_date_range
-    -> use _paginate_by_date_range
 - add typing: return types and parameter types
+- use literal for optional str
+
+- method: _normalize_json()
+- should publisher methods duplicate advertiser methods?
 
 - Error handeling:
     Request failed with HTTP status code 429: request.limit.exceeded. Details: Requests limit '20' times per '1' minutes' is exceeded

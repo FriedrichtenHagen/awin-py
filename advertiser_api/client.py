@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from pprint import pprint
 from datetime import datetime, timedelta
 import time
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, Literal
+
 
 from advertiser_api.errors import AwinError, AwinApiError
 from advertiser_api.models import Transaction
@@ -16,11 +17,13 @@ Docs: https://wiki.awin.com/index.php/Advertiser_API
 """
 
 class Awin:
-
     BASE_URL = "https://api.awin.com/"
     """base URL of the Awin HTTP API"""
 
-    def __init__(self, base_url=None, client_id=None, client_secret=None):
+    def __init__(self, 
+                 base_url=None, 
+                 client_id=None, 
+                 client_secret=None) -> None:
         self.base_url = base_url or self.BASE_URL
         
         load_dotenv()
@@ -31,7 +34,10 @@ class Awin:
             "Authorization": f"Bearer {self.client_secret}"
         }
 
-    def _request(self, path, params=None, method='GET') -> List[Dict[str, Any]]:
+    def _request(self, 
+                 path, 
+                 params=None, 
+                 method='GET') -> List[Dict[str, Any]]:
             """
             Make a request against the AWIN API.
             Returns the HTTP response, which might be successful or not.
@@ -52,7 +58,12 @@ class Awin:
             else:
                 raise AwinApiError.from_response(response)
     
-    def _paginate_date_range(self, path, start_date, end_date, is_report, params=None, method='GET') -> List[Dict[str, Any]]:
+    def _paginate_date_range(self, 
+                             path, 
+                             start_date, 
+                             end_date, 
+                             is_report, 
+                             params=None) -> List[Dict[str, Any]]:
         """
         Paginate over a provided date range.
         Returns a list of results
@@ -141,7 +152,28 @@ class Awin:
         publishers = self._request(f'advertisers/{self.client_id}/publishers')
         return publishers
 
-    def get_transactions(self, start_date, end_date, date_type='transaction', timezone='UTC', status=None, publisher_id=None, show_basket_products=None)  -> List[Dict[str, Any]]:
+    def get_transactions(self, 
+                         start_date, 
+                         end_date, 
+                         date_type='transaction', 
+                         timezone: Optional[Literal[
+                         'Europe/Berlin',
+                         'Europe/Paris',
+                         'Europe/London',
+                         'Europe/Dublin',
+                         'Canada/Eastern',
+                         'Canada/Central',
+                         'Canada/Mountain',
+                         'Canada/Pacific',
+                         'US/Eastern',
+                         'US/Central',
+                         'US/Mountain',
+                         'US/Pacific',
+                         'UTC'
+                         ]] = 'UTC', 
+                         status=None, 
+                         publisher_id=None, 
+                         show_basket_products=None)  -> List[Dict[str, Any]]:
         """
         GET transactions (list)
         provides a list of your individual transactions
@@ -149,20 +181,7 @@ class Awin:
         :param start_date: date object that specifies the beginning of the selected date range
         :param end_date: date object that specifies the end of the selected date range
         :param date_type: The type of date by which the transactions are selected. Can be 'transaction' or 'validation'. (optional)
-        :param timezone: Can be one of the following:
-            Europe/Berlin
-            Europe/Paris
-            Europe/London
-            Europe/Dublin
-            Canada/Eastern
-            Canada/Central
-            Canada/Mountain
-            Canada/Pacific
-            US/Eastern
-            US/Central
-            US/Mountain
-            US/Pacific
-            UTC
+        :param timezone: chosen timezone. Defaults to 'UTC'
         :param status: Filter by transaction status. Can be one of the following: pending, approved, declined, deleted
         :param publisherId: Allows filtering by publisher id. Example: 12345 or 12345,67890 for multiple ones
         :param show_basket_products: If &showBasketProducts=true then products sent via Product Level Tracking matched to the transaction can be viewed
@@ -185,26 +204,30 @@ class Awin:
 
         return pag_transaction_list
 
-    def get_transactions_by_id(self, ids: List[str], timezone: str ='UTC', show_basket_products: bool=None)  -> List[Dict[str, Any]]:
+    def get_transactions_by_id(self, 
+                               ids: List[str], 
+                                     timezone: Optional[Literal[
+                                        'Europe/Berlin',
+                                        'Europe/Paris',
+                                        'Europe/London',
+                                        'Europe/Dublin',
+                                        'Canada/Eastern',
+                                        'Canada/Central',
+                                        'Canada/Mountain',
+                                        'Canada/Pacific',
+                                        'US/Eastern',
+                                        'US/Central',
+                                        'US/Mountain',
+                                        'US/Pacific',
+                                        'UTC'
+                                     ]] = 'UTC', 
+                               show_basket_products: bool=None) -> List[Dict[str, Any]]:
         """
         GET transactions (list)
         provides a list of transactions by id
 
         :param ids:	List of ids.
-        :param timezone: Can be one of the following:
-            Europe/Berlin
-            Europe/Paris
-            Europe/London
-            Europe/Dublin
-            Canada/Eastern
-            Canada/Central
-            Canada/Mountain
-            Canada/Pacific
-            US/Eastern
-            US/Central
-            US/Mountain
-            US/Pacific
-            UTC
+        :param timezone: chosen timezone. Defaults to 'UTC'
         :param show_basket_products: If &showBasketProducts=true then products sent via Product Level Tracking matched to the transaction can be viewed
         :return: list of ``transaction`` instances
 
@@ -226,38 +249,36 @@ class Awin:
         # model_testing_list = []
         # for transaction in transactions:
         #     model_testing_list.append(Transaction(**transaction))
-
         return transactions
 
-    # GET reports aggregated by publisher
-    # provides aggregated reports for the publishers you work with
     def get_reports_agg_by_publisher(self, 
                                      start_date:str, 
                                      end_date:str, 
                                      date_type:str = 'transaction', 
-                                     timezone:str = 'UTC') -> List[Dict[str, Any]]:
+                                     timezone: Optional[Literal[
+                                        'Europe/Berlin',
+                                        'Europe/Paris',
+                                        'Europe/London',
+                                        'Europe/Dublin',
+                                        'Canada/Eastern',
+                                        'Canada/Central',
+                                        'Canada/Mountain',
+                                        'Canada/Pacific',
+                                        'US/Eastern',
+                                        'US/Central',
+                                        'US/Mountain',
+                                        'US/Pacific',
+                                        'UTC'
+                                     ]] = 'UTC',) -> List[Dict[str, Any]]:
         """
-        GET transactions (list)
-        provides a list of transactions by id
+        GET reports aggregated by publisher
+        provides aggregated reports for the publishers you work with
 
         :param start_date: date object that specifies the beginning of the selected date range
         :param end_date: date object that specifies the end of the selected date range
         :param date_type: The type of date by which the transactions are selected. Can be 'transaction' or 'validation'. (optional)
-        :param timezone: Can be one of the following:
-            Europe/Berlin
-            Europe/Paris
-            Europe/London
-            Europe/Dublin
-            Canada/Eastern
-            Canada/Central
-            Canada/Mountain
-            Canada/Pacific
-            US/Eastern
-            US/Central
-            US/Mountain
-            US/Pacific
-            UTC
-        :return: list of ``transaction`` instances
+        :param timezone: chosen timezone. Defaults to 'UTC'
+        :return: list of ``report`` instances
 
         https://wiki.awin.com/index.php/API_get_reports_aggrcampaign_adv
         """
@@ -268,10 +289,92 @@ class Awin:
         pag_transaction_list = self._paginate_date_range(path='reports/publisher', start_date= start_date, end_date= end_date, is_report= True, params= params)
         return pag_transaction_list
     
+    def get_reports_agg_by_creative(self, 
+                                     start_date:str, 
+                                     end_date:str, 
+                                     date_type:str = 'transaction', 
+                                     region:str = 'DE',
+                                     timezone: Optional[Literal[
+                                        'Europe/Berlin',
+                                        'Europe/Paris',
+                                        'Europe/London',
+                                        'Europe/Dublin',
+                                        'Canada/Eastern',
+                                        'Canada/Central',
+                                        'Canada/Mountain',
+                                        'Canada/Pacific',
+                                        'US/Eastern',
+                                        'US/Central',
+                                        'US/Mountain',
+                                        'US/Pacific',
+                                        'UTC'
+                                     ]] = 'UTC',) -> List[Dict[str, Any]]:
+        """
+        GET reports aggregated by creative
+        provides aggregated reports for the creatives you used
 
+        :param start_date: date object that specifies the beginning of the selected date range
+        :param end_date: date object that specifies the end of the selected date range
+        :param date_type: The type of date by which the transactions are selected. Can be 'transaction' or 'validation'. (optional)
+        :param region: AT, AU, BE, BR (Brazil programs in BRL), BU (Brazil programs in USD), CA, CH, DE, DK, ES, FI, FR, GB, IE, IT, NL, NO, PL, SE, US,
+        :param timezone: chosen timezone. Defaults to 'UTC'
+        :return: list of ``report`` instances
+
+        https://wiki.awin.com/index.php/API_get_reports_aggrbycreative_adv
+        """
+        params = {
+            'date_type': date_type,
+            'region': region,
+            'timezone': timezone,
+        }
+        pag_transaction_list = self._paginate_date_range(path='reports/creative', start_date= start_date, end_date= end_date, is_report= True, params= params)
+        return pag_transaction_list
     
-    # GET reports aggregated by creative
-    # provides aggregated reports for the creatives you used
-    
-    # GET reports aggregated by campaign
-    # provides aggregated reports for the campaigns that the publisher promotes
+    def get_reports_agg_by_campaign(self, 
+                                     start_date:str, 
+                                     end_date:str, 
+                                     campaign:str = None,
+                                     timezone: Optional[Literal[
+                                        'Europe/Berlin',
+                                        'Europe/Paris',
+                                        'Europe/London',
+                                        'Europe/Dublin',
+                                        'Canada/Eastern',
+                                        'Canada/Central',
+                                        'Canada/Mountain',
+                                        'Canada/Pacific',
+                                        'US/Eastern',
+                                        'US/Central',
+                                        'US/Mountain',
+                                        'US/Pacific',
+                                        'UTC'
+                                     ]] = 'UTC',
+                                     publisher_ids:List[int] = None,
+                                     include_numbers_without_campaign:bool = False,
+                                     interval:Optional[Literal['day', 'month', 'year']] = None) -> List[Dict[str, Any]]:
+        """
+        GET reports aggregated by campaign
+        provides aggregated reports for the campaigns that the publisher promotes
+
+        :param start_date: date object that specifies the beginning of the selected date range
+        :param end_date: date object that specifies the end of the selected date range
+        :param campaign: The value which was used in &campaign=.
+        :param timezone: chosen timezone. Defaults to 'UTC'
+        :param publisher_ids: One or more publisher ID.
+        :param include_numbers_without_campaign: By default the API just delivers numbers in case of a campaign was associated with the click or the transations.
+            If set to "true" the result will also incl. numbers from clicks and transaction without campaign parameter.
+            The parameter will BE ignored (default "false") once the parameter "campaign=" contains a valid value.
+        :param interval: If set, numbers will be reported in sums per interval (day, month, year).
+        :return: list of ``report`` instances
+
+        https://wiki.awin.com/index.php/API_get_reports_aggrbycampaign_adv
+        """
+        params = {
+            'campaign': campaign,
+            'timezone': timezone,
+            'publisher_ids': publisher_ids,
+            'include_numbers_without_campaign': include_numbers_without_campaign,
+            'interval': interval
+        }
+        pag_transaction_list = self._paginate_date_range(path='reports/campaign', start_date= start_date, end_date= end_date, is_report= True, params= params)
+        return pag_transaction_list
