@@ -74,7 +74,7 @@ If something appears to be broken, please have a look at the [open issues](https
 * Aims to cover all functions of the Awin API (work in progress)
 * Python function wrappers for all API endpoints as part of the Awin class
 * Object mappings for all API resources, e.g. an Transaction is an object with properties for all the information that is provided by the REST API.
-* Support for Type Hints
+* Support for type hints
 * Only one dependency: [requests](https://pypi.org/project/requests/)
 
 ## Getting Started
@@ -87,16 +87,16 @@ awin-py currently only implements a subset of all available API features. This s
 
 ### Available
 
-Advertiser API
+- Advertiser API
 
 ### Not yet implemented
 
-Publisher API
-Transaction Validation API
+- Publisher API
+- Transaction Validation API
 
 
 ## License
-Copyright [2024] [Friedrich ten Hagen]
+Copyright 2024 Friedrich ten Hagen
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

@@ -3,9 +3,9 @@ from urllib.parse import urljoin
 import requests
 from dotenv import load_dotenv
 from pprint import pprint
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import time
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, Literal
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, Literal, Date
 
 
 from advertiser_api.errors import AwinError, AwinApiError
@@ -21,9 +21,9 @@ class Awin:
     """base URL of the Awin HTTP API"""
 
     def __init__(self, 
-                 base_url=None, 
-                 client_id=None, 
-                 client_secret=None) -> None:
+                 base_url:str = None, 
+                 client_id:str = None, 
+                 client_secret:str = None) -> None:
         self.base_url = base_url or self.BASE_URL
         
         load_dotenv()
@@ -35,8 +35,8 @@ class Awin:
         }
 
     def _request(self, 
-                 path, 
-                 params=None, 
+                 path:str, 
+                 params:str = None, 
                  method='GET') -> List[Dict[str, Any]]:
             """
             Make a request against the AWIN API.
@@ -59,10 +59,10 @@ class Awin:
                 raise AwinApiError.from_response(response)
     
     def _paginate_date_range(self, 
-                             path, 
-                             start_date, 
-                             end_date, 
-                             is_report, 
+                             path:str, 
+                             start_date:date, 
+                             end_date:date, 
+                             is_report:bool, 
                              params=None) -> List[Dict[str, Any]]:
         """
         Paginate over a provided date range.
@@ -153,9 +153,9 @@ class Awin:
         return publishers
 
     def get_transactions(self, 
-                         start_date, 
-                         end_date, 
-                         date_type='transaction', 
+                         start_date:date, 
+                         end_date:date, 
+                         date_type:Optional[Literal['transaction', 'validation']] = 'transaction', 
                          timezone: Optional[Literal[
                          'Europe/Berlin',
                          'Europe/Paris',
@@ -171,9 +171,9 @@ class Awin:
                          'US/Pacific',
                          'UTC'
                          ]] = 'UTC', 
-                         status=None, 
-                         publisher_id=None, 
-                         show_basket_products=None)  -> List[Dict[str, Any]]:
+                         status:Optional[Literal['pending', 'approved', 'declined', 'deleted']] = None, 
+                         publisher_id:str = None, 
+                         show_basket_products:bool = None)  -> List[Dict[str, Any]]:
         """
         GET transactions (list)
         provides a list of your individual transactions
@@ -221,7 +221,7 @@ class Awin:
                                         'US/Pacific',
                                         'UTC'
                                      ]] = 'UTC', 
-                               show_basket_products: bool=None) -> List[Dict[str, Any]]:
+                               show_basket_products: bool = None) -> List[Dict[str, Any]]:
         """
         GET transactions (list)
         provides a list of transactions by id
@@ -252,9 +252,9 @@ class Awin:
         return transactions
 
     def get_reports_agg_by_publisher(self, 
-                                     start_date:str, 
-                                     end_date:str, 
-                                     date_type:str = 'transaction', 
+                                     start_date:date, 
+                                     end_date:date, 
+                                     date_type:Optional[Literal['transaction', 'validation']] = 'transaction', 
                                      timezone: Optional[Literal[
                                         'Europe/Berlin',
                                         'Europe/Paris',
@@ -290,10 +290,12 @@ class Awin:
         return pag_transaction_list
     
     def get_reports_agg_by_creative(self, 
-                                     start_date:str, 
-                                     end_date:str, 
-                                     date_type:str = 'transaction', 
-                                     region:str = 'DE',
+                                     start_date:date, 
+                                     end_date:date, 
+                                     date_type:Optional[Literal['transaction', 'validation']] = 'transaction', 
+                                     region:Optional[Literal['AT', 'AU', 'BE', 'BR', 'BU', 'CA', 'CH', 'DE',
+                                        'DK', 'ES', 'FI', 'FR', 'GB', 'IE', 'IT', 'NL', 'NO', 'PL', 'SE',
+                                        'US',]] = 'DE',
                                      timezone: Optional[Literal[
                                         'Europe/Berlin',
                                         'Europe/Paris',
@@ -331,8 +333,8 @@ class Awin:
         return pag_transaction_list
     
     def get_reports_agg_by_campaign(self, 
-                                     start_date:str, 
-                                     end_date:str, 
+                                     start_date:date, 
+                                     end_date:date, 
                                      campaign:str = None,
                                      timezone: Optional[Literal[
                                         'Europe/Berlin',
