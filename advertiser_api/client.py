@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from pprint import pprint
 from datetime import datetime, timedelta, date
 import time
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, Literal, Date
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, Literal
+import logging 
 
 
 from advertiser_api.errors import AwinError, AwinApiError
@@ -70,8 +71,8 @@ class Awin:
 
         :param path: the URL path (relative to the Awin API base URL)
         :param start_date: date object that specifies the beginning of the selected date range
-        :param is_report: boolean to indicate if report endpoint or other. Necessary for date formats
         :param end_date: date object that specifies the end of the selected date range
+        :param is_report: boolean to indicate if report endpoint or other. Necessary for date formats
         :param params: dictionary of URL parameters
         :return: list of transactions
 
@@ -82,12 +83,11 @@ class Awin:
         number_of_requests = number_of_days // 31
         if number_of_requests % 31 != 0 or number_of_days < 31:
             number_of_requests += 1
-        print(f'number of request: {number_of_requests}')
-
+        logging.info(f'number of requests: {number_of_requests}')
         # paginate in steps of 31 days
         total_transaction_list = []
         for i in range(number_of_requests):
-            print(f'request number {i}')
+            logging.info(f'current request is number {i}')
             if number_of_requests == 1:
                 # only one request
                 pag_start_date = start_date
@@ -110,12 +110,11 @@ class Awin:
                 # add 1s to end date. This prevents the end date and the start date of the next request from overlapping
                 if i > 0:
                     pag_start_date += timedelta(seconds=1)
-                    # Convert datetime to awin date string format
-                    dt_start_str = pag_start_date.strftime("%Y-%m-%dT%H:%M:%S")
-                    dt_end_str = pag_end_date.strftime("%Y-%m-%dT%H:%M:%S")
+                # Convert datetime to awin date string format
+                dt_start_str = pag_start_date.strftime("%Y-%m-%dT%H:%M:%S")
+                dt_end_str = pag_end_date.strftime("%Y-%m-%dT%H:%M:%S")
 
-            print(f'Start timestamp: {dt_start_str}. End timestamp:{dt_end_str}')
-            
+            logging.info(f'Start date: {dt_start_str}. End date: {dt_end_str}')
             # add start and end date to params
             params['startDate'] = dt_start_str
             params['endDate'] = dt_end_str
@@ -236,7 +235,7 @@ class Awin:
 
         # extract ids from comma separated string
         comma_separated_ids = ", ".join(ids)
-        print(comma_separated_ids)
+        logging.info(f'comma separated ids: {comma_separated_ids}')
 
         params = {
             'ids': comma_separated_ids,
