@@ -4,8 +4,6 @@
 The goals is to provide an easy to use interface for all AWIN API endpoints.
 It handles pagination, rate limiting, errors. Most information needed is available via docstrings, for further details please refer to the [AWIN API docs](https://wiki.awin.com/index.php/API).
 
-Currently only the advertiser api is supported.
-
 ```python
 >>> from advertiser_api.client import Awin
 >>> Awin = Awin(client_id='***', client_secret='***')
@@ -75,21 +73,25 @@ If something appears to be broken, please have a look at the [open issues](https
 * Python function wrappers for all API endpoints as part of the Awin class
 * Support for type hints
 
-## Contributing
-
 ## API Functions
 
-awin-py currently only implements a subset of all available API features. This section gives an overview over which API functions are accessible through awin-py.
+awin-py currently only implements a subset of all available API features. This section gives an overview over which API endpoints are accessible through awin-py.
 
 ### Available
 
 - Advertiser API
+    - GET accounts
+    - GET publishers
+    - GET transactions (list)
+    - GET transactions (ID)
+    - GET reports aggregated by publisher
+    - GET reports aggregated by creative
+    - GET reports aggregated by campaign
 
 ### Not yet implemented
 
 - Publisher API
 - Transaction Validation API
-
 
 ## License
 Copyright 2024 Friedrich ten Hagen
