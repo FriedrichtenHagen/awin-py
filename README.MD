@@ -1,8 +1,8 @@
-# personio-py
+# awin-py
 
 **awin-py** is a python wrapper around the [AWIN API](https://wiki.awin.com/index.php/API).
 The goals is to provide an easy to use interface for all AWIN API endpoints.
-It handles pagination, rate limiting and errors. 
+It handles pagination, rate limiting, errors. Most information needed is available via docstrings, for further details please refer to the [AWIN API docs](https://wiki.awin.com/index.php/API).
 
 Currently only the advertiser api is supported.
 
@@ -73,11 +73,7 @@ If something appears to be broken, please have a look at the [open issues](https
 
 * Aims to cover all functions of the Awin API (work in progress)
 * Python function wrappers for all API endpoints as part of the Awin class
-* Object mappings for all API resources, e.g. an Transaction is an object with properties for all the information that is provided by the REST API.
 * Support for type hints
-* Only one dependency: [requests](https://pypi.org/project/requests/)
-
-## Getting Started
 
 ## Contributing
 

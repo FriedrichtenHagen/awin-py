@@ -2,15 +2,13 @@ import os
 from urllib.parse import urljoin
 import requests
 from dotenv import load_dotenv
-from pprint import pprint
 from datetime import datetime, timedelta, date
 import time
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, Literal
 import logging 
 
 
-from advertiser_api.errors import AwinError, AwinApiError
-from advertiser_api.models import Transaction
+from .errors import AwinError, AwinApiError
 """
 Implementation of the Awin API functions
 

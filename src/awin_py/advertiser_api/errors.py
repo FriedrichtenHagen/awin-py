@@ -2,8 +2,6 @@
 types of errors specified by awin-py
 """
 from typing import Any, Dict, Type
-from pprint import pprint
-
 from requests import Response
 
 class AwinError(Exception):
