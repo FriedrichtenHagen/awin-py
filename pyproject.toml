@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "awin-py"
-version = "0.0.8"
+version = "0.0.3"
 authors = [
   { name="Friedrich ten Hagen", email="author@example.com" },
 ]

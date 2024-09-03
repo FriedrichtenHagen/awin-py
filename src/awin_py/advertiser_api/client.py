@@ -1,7 +1,6 @@
 import os
 from urllib.parse import urljoin
 import requests
-from dotenv import load_dotenv
 from datetime import datetime, timedelta, date
 import time
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, Literal
@@ -22,16 +21,19 @@ class Awin:
     def __init__(self, 
                  base_url:str = None, 
                  client_id:str = None, 
-                 client_secret:str = None) -> None:
+                 client_secret:str = None,
+                 max_retries:int = 3,
+                 default_retry_wait = 60) -> None:
         self.base_url = base_url or self.BASE_URL
         
-        load_dotenv()
         self.client_id = client_id or os.getenv('CLIENT_ID')
         self.client_secret = client_secret or os.getenv('CLIENT_SECRET')
         
         self.headers = {
             "Authorization": f"Bearer {self.client_secret}"
         }
+        self.max_retries = max_retries
+        self.default_retry_wait = default_retry_wait
 
     def _request(self, 
                  path:str, 
@@ -48,14 +50,21 @@ class Awin:
             """
             # make the request
             url = urljoin(self.base_url, path)
-            response = requests.request(method, url, headers=self.headers, params=params)
-            if response.ok:
-                try:
-                    return response.json()
-                except ValueError:
-                    raise AwinError(f"Failed to parse response as json: {response.text}")
-            else:
-                raise AwinApiError.from_response(response)
+            retries = 0
+            
+            while retries <= self.max_retries:
+                response = requests.request(method, url, headers=self.headers, params=params)
+                if response.ok:
+                    try:
+                        return response.json()
+                    except ValueError:
+                        raise AwinError(f"Failed to parse response as json: {response.text}")
+                elif response.status_code == 429:
+                    retries += 1
+                    logging.warning(f"Rate limit exceeded. Retrying in {self.default_retry_wait} seconds...")
+                    time.sleep(self.default_retry_wait)            
+                else:
+                    raise AwinApiError.from_response(response)
     
     def _paginate_date_range(self, 
                              path:str, 
